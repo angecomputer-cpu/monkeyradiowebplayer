@@ -260,24 +260,36 @@
         window.addEventListener('resize', () => updateTexts(currentSongInfo));
 
         // =====================================
-        // 2. RECUPERO DATI BRANO (JSONBin + iTunes)
+        // 2. RECUPERO DATI BRANO (Diretto da Icecast2 AzuraCast)
         // =====================================
         async function fetchSongData() {
             try {
-                const res = await fetch(JSONBIN_URL, { headers: { "X-Master-Key": JSONBIN_KEY } });
+                // Leggiamo lo status JSON nativo di Icecast2 (100% Gratuito e Illimitato)
+                const res = await fetch("https://a11.asurahosting.com:8610/status-json.xsl");
                 if (!res.ok) return;
-                const data = await res.json();
-                let rawInfo = data.record.raw_info;
                 
-                // Pulisce l'output del demone se vuoto
-                if (!rawInfo || rawInfo.trim() === "") rawInfo = "Diretta Streaming";
+                const data = await res.json();
+                let rawInfo = "Diretta Streaming";
+
+                // Icecast struttura i dati a seconda di quanti mount point ci sono
+                if (data.icestats && data.icestats.source) {
+                    // Trasforma in array per sicurezza (se c'è 1 solo mount è un oggetto, se >1 è array)
+                    const sources = Array.isArray(data.icestats.source) ? data.icestats.source : [data.icestats.source];
+                    
+                    // Cerca il nostro mount point
+                    const mount = sources.find(m => m.listenurl && m.listenurl.includes("/radio.mp3"));
+                    
+                    if (mount && mount.title) {
+                        rawInfo = mount.title;
+                    }
+                }
 
                 if (rawInfo !== currentSongInfo) {
                     currentSongInfo = rawInfo;
                     await processNewSong(rawInfo);
                 }
             } catch (err) {
-                console.error("Lettura dati brano fallita:", err);
+                console.error("Lettura metadati Icecast fallita:", err);
             }
         }
 
