@@ -40,7 +40,6 @@
             position: relative;
         }
 
-        /* Gestione Logo/Cover */
         .logo-box video {
             width: 100%;
             height: 100%;
@@ -50,7 +49,7 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            display: none; /* Nascosto di default, si attiva se trova la cover */
+            display: none;
         }
 
         .info-box {
@@ -99,9 +98,8 @@
             100% { transform: translate3d(-50%, 0, 0); }
         }
 
-        /* UI BUFFERING (Le Banane) */
         #buffering-box {
-            display: none; /* Attivato via JS durante il loading */
+            display: none;
             flex-direction: row;
             align-items: center;
             width: 100%;
@@ -109,7 +107,7 @@
         .buf-label {
             font-size: 0.8rem;
             font-weight: 800;
-            color: #e5a900; /* Giallo scuro per risaltare sul bianco */
+            color: #e5a900;
             margin-right: 6px;
             letter-spacing: 0.5px;
         }
@@ -119,7 +117,6 @@
             white-space: nowrap;
         }
 
-        /* Adattamento schermi piccoli (Smartphone) per le banane */
         @media (max-width: 480px) {
             #buffering-box {
                 flex-direction: column;
@@ -157,7 +154,6 @@
 
     <div class="player-bar">
         <div class="logo-box">
-            <!-- Il logo video si disattiva e cede il posto all'immagine se troviamo la cover -->
             <video id="coverVideo" src="https://assets.nicepagecdn.com/966432fa/6080027/files/OK_QR_NICE_LONG.mp4" preload="auto" loop muted playsinline></video>
             <img id="coverImg" alt="Cover Brano">
         </div>
@@ -169,14 +165,12 @@
                 </div>
             </div>
             
-            <!-- Box Titolo Canzone (Nascosto durante il buffering) -->
             <div class="scroll-container" id="track-container">
                 <div class="scroll-wrapper" id="track-wrapper">
                     <p><span class="text-item" id="track-title">Diretta Streaming</span></p>
                 </div>
             </div>
 
-            <!-- Box Buffering Banane (Visibile durante il caricamento) -->
             <div id="buffering-box">
                 <div class="buf-label">BUFFERING</div>
                 <div class="buf-bananas" id="bananas"></div>
@@ -194,12 +188,12 @@
     <audio id="audioStream" crossorigin="anonymous" preload="none"></audio>
 
     <script>
-        // === CONFIGURAZIONE PRINCIPALE ===
+        // === CONFIGURAZIONE PRINCIPALE & TELEGRAM ===
         const STREAM_URL = "https://a11.asurahosting.com:8610/radio.mp3";
-        const JSONBIN_URL = "https://api.jsonbin.io/v3/b/6a68f7e8f5f4af5e29ce345c/latest";
-        const JSONBIN_KEY = "$2a$10$sE5pDI6woDNmo3UlsHV5vePw/jtT46HfoSja5Oq.j3v78cFN15R3O";
+        const TELEGRAM_BOT_TOKEN = "INSERISCI_TELEGRAM_BOT_TOKEN";
+        const TELEGRAM_ADMIN_ID = "INSERISCI_TELEGRAM_ADMIN_ID";
         const DEFAULT_VIDEO = "https://assets.nicepagecdn.com/966432fa/6080027/files/OK_QR_NICE_LONG.mp4";
-        const PAUSE_THRESHOLD = 30000; // 30 Secondi
+        const PAUSE_THRESHOLD = 30000;
 
         // === ELEMENTI DOM ===
         const audio = document.getElementById('audioStream');
@@ -260,28 +254,18 @@
         window.addEventListener('resize', () => updateTexts(currentSongInfo));
 
         // =====================================
-        // 2. RECUPERO DATI BRANO (Diretto da Icecast2 AzuraCast)
+        // 2. RECUPERO DATI BRANO (Tramite API Telegram sicure)
         // =====================================
         async function fetchSongData() {
             try {
-                // Leggiamo lo status JSON nativo di Icecast2 (100% Gratuito e Illimitato)
-                const res = await fetch("https://a11.asurahosting.com:8610/status-json.xsl");
+                const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getChat?chat_id=${TELEGRAM_ADMIN_ID}`);
                 if (!res.ok) return;
                 
                 const data = await res.json();
                 let rawInfo = "Diretta Streaming";
 
-                // Icecast struttura i dati a seconda di quanti mount point ci sono
-                if (data.icestats && data.icestats.source) {
-                    // Trasforma in array per sicurezza (se c'è 1 solo mount è un oggetto, se >1 è array)
-                    const sources = Array.isArray(data.icestats.source) ? data.icestats.source : [data.icestats.source];
-                    
-                    // Cerca il nostro mount point
-                    const mount = sources.find(m => m.listenurl && m.listenurl.includes("/radio.mp3"));
-                    
-                    if (mount && mount.title) {
-                        rawInfo = mount.title;
-                    }
+                if (data.ok && data.result) {
+                    rawInfo = data.result.description || data.result.title || "Diretta Streaming";
                 }
 
                 if (rawInfo !== currentSongInfo) {
@@ -289,7 +273,7 @@
                     await processNewSong(rawInfo);
                 }
             } catch (err) {
-                console.error("Lettura metadati Icecast fallita:", err);
+                console.error("Lettura metadati Telegram fallita:", err);
             }
         }
 
@@ -297,17 +281,14 @@
             let coverUrl = null;
             if (songName !== "Diretta Streaming") {
                 try {
-                    // Cerca la cover su iTunes
                     const itunesRes = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(songName)}&entity=song&limit=1`);
                     const itunesData = await itunesRes.json();
                     if (itunesData.results && itunesData.results.length > 0) {
-                        // Sostituisce la miniatura 100x100 con la super HD 512x512
                         coverUrl = itunesData.results[0].artworkUrl100.replace('100x100bb', '512x512bb');
                     }
                 } catch (e) {}
             }
 
-            // Cambia interfaccia grafica logo/cover
             if (coverUrl) {
                 coverImg.src = coverUrl;
                 coverImg.style.display = 'block';
@@ -325,9 +306,8 @@
             }
         }
 
-        // Interroga JSONBin ogni 12 secondi
         setInterval(fetchSongData, 12000);
-        fetchSongData(); // Primo avvio
+        fetchSongData();
 
         // =====================================
         // 3. ANIMAZIONE BANANE & UI STATE
@@ -393,7 +373,6 @@
                 userIntentPlay = true;
                 setUIState('loading');
                 
-                // Ripristino Cache se Pausa > 30s o se è il primo avvio
                 if (!audio.src || (now - pauseTime > PAUSE_THRESHOLD)) {
                     hardStop();
                     audio.src = `${STREAM_URL}?t=${now}`;
@@ -408,19 +387,18 @@
                 });
             } else {
                 userIntentPlay = false;
-                pauseTime = Date.now(); // Segna l'ora della pausa
+                pauseTime = Date.now();
                 clearTimeout(reconnectTimer);
                 audio.pause();
-                // NON facciamo hardStop qui. Se l'utente preme riprendi subito (<30s) il player non ricarica il buffer!
                 setUIState('stopped');
                 releaseWakeLock();
             }
         }
         playBtn.addEventListener('click', togglePlay);
 
-        // ======================================
+        // =====================================
         // 5. STABILITA' RETE E AUTO-RECONNECT
-        // ======================================
+        // =====================================
         function forceReconnect() {
             if (!userIntentPlay) return;
             setUIState('loading');
@@ -445,7 +423,6 @@
         });
 
         audio.addEventListener('pause', () => {
-            // Se l'OS mette in pausa forzata (es. disconnessione bluetooth / telefonata)
             if (userIntentPlay && audio.readyState > 0) {
                 userIntentPlay = false;
                 pauseTime = Date.now();
@@ -462,7 +439,6 @@
                 let title = currentSongInfo;
                 let artist = "Monkey Radio Italy";
 
-                // Se JSONBIN formatta come "Artista - Titolo", li divide correttamente
                 if (currentSongInfo.includes(" - ")) {
                     let parts = currentSongInfo.split(" - ");
                     artist = parts[0].trim();
@@ -471,7 +447,6 @@
                     artist = "In Diretta";
                 }
 
-                // Invia la cover se trovata, altrimenti un video/icona fallback
                 let artworkArr = currentCoverUrl 
                     ? [ { src: currentCoverUrl, sizes: '512x512', type: 'image/jpeg' } ]
                     : [ { src: DEFAULT_VIDEO, sizes: '512x512', type: 'video/mp4' } ];
@@ -500,7 +475,6 @@
             }
         });
 
-        // Avvio inizializzazione testi
         window.addEventListener('DOMContentLoaded', () => updateTexts("Diretta Streaming"));
     </script>
 </body>
