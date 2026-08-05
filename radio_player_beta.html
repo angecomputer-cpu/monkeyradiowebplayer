@@ -1,80 +1,180 @@
-cat << 'EOF' > /home/monkey/monkey_songrec.py
-import os
-import time
-import subprocess
-import json
-
-STREAM_URL = "https://a11.asurahosting.com:8610/radio.mp3"
-TEMP_AUDIO = "/home/monkey/temp_rec.mp3"
-JSON_PATH = "/home/monkey/now_playing.json"
-HTML_JSON_PATH = "/home/monkey/current_track.json"
-
-def record_audio():
-    if os.path.exists(TEMP_AUDIO):
-        try:
-            os.remove(TEMP_AUDIO)
-        except:
-            pass
-    
-    cmd = [
-        "ffmpeg", "-y",
-        "-i", STREAM_URL,
-        "-t", "12",
-        "-vn",
-        "-acodec", "libmp3lame",
-        "-ab", "128k",
-        TEMP_AUDIO
-    ]
-    try:
-        subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=25)
-        return os.path.exists(TEMP_AUDIO) and os.path.getsize(TEMP_AUDIO) > 1000
-    except Exception as e:
-        print(f"[SONGREC] Errore FFmpeg: {e}")
-        return False
-
-def recognize_audio():
-    cmd = ["songrec", "audio-file-to-recognized-song", TEMP_AUDIO]
-    try:
-        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=20)
-        if res.returncode == 0 and res.stdout.strip():
-            data = json.loads(res.stdout)
-            
-            track = data.get("track")
-            if not track and isinstance(data, dict):
-                track = data
-            
-            if track:
-                title = track.get("title") or track.get("heading", {}).get("title") or "Unknown Title"
-                subtitle = track.get("subtitle") or track.get("heading", {}).get("subtitle") or "Unknown Artist"
-                if title != "Unknown Title" or subtitle != "Unknown Artist":
-                    return f"{subtitle} - {title}"
-    except Exception as e:
-        print(f"[SONGREC] Errore SongRec: {e}")
-    return None
-
-def main():
-    print("[SONGREC] Avvio demone di riconoscimento con sincronizzazione doppia...")
-    while True:
-        song_title = "Diretta Streaming"
-        if record_audio():
-            recognized = recognize_audio()
-            if recognized:
-                song_title = recognized
-        
-        payload = {
-            "current_song": song_title,
-            "timestamp": time.time()
+cat << 'EOF' > /home/monkey/radio_player.html
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monkey Radio Italy - Player</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
-        try:
-            for path in [JSON_PATH, HTML_JSON_PATH]:
-                with open(path, 'w', encoding='utf-8') as f:
-                    json.dump(payload, f, ensure_ascii=False, indent=2)
-            print(f"[SONGREC] Brano aggiornato ovunque: {song_title}")
-        except Exception as e:
-            print(f"[SONGREC] Errore scrittura JSON: {e}")
-        
-        time.sleep(5)
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .player-card {
+            background: #1e1e1e;
+            border-radius: 12px;
+            padding: 30px;
+            width: 350px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            text-align: center;
+            border: 1px solid #333;
+        }
+        .station-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #ff9800;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+        }
+        .now-playing-container {
+            background: #111;
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin-bottom: 25px;
+            overflow: hidden;
+            white-space: nowrap;
+            position: relative;
+            border: 1px solid #2a2a2a;
+        }
+        .now-playing-label {
+            font-size: 0.75rem;
+            color: #888;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            letter-spacing: 0.5px;
+        }
+        .track-wrapper {
+            display: inline-block;
+            white-space: nowrap;
+        }
+        .track-title {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #f1f1f1;
+            display: inline-block;
+        }
+        /* Animazione marquee attivata via JS solo se necessario */
+        .marquee {
+            animation: scrollText 10s linear infinite;
+        }
+        @keyframes scrollText {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .play-btn {
+            background-color: #ff9800;
+            color: #121212;
+            border: none;
+            border-radius: 50px;
+            width: 65px;
+            height: 65px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+        }
+        .play-btn:hover {
+            background-color: #f57c00;
+            transform: scale(1.05);
+        }
+        .play-btn:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
 
-if __name__ == "__main__":
-    main()
+    <div class="player-card">
+        <div class="station-title">MONKEY RADIO ITALY</div>
+        
+        <div class="now-playing-container" id="container">
+            <div class="now-playing-label">In Onda Ora</div>
+            <div id="trackWrapper" class="track-wrapper">
+                <span id="trackTitle" class="track-title">Caricamento...</span>
+            </div>
+        </div>
+
+        <audio id="radioStream" src="https://a11.asurahosting.com:8610/radio.mp3" preload="none"></audio>
+        
+        <button id="playBtn" class="play-btn" onclick="togglePlay()">▶</button>
+    </div>
+
+    <script>
+        const audio = document.getElementById('radioStream');
+        const playBtn = document.getElementById('playBtn');
+        const trackTitle = document.getElementById('trackTitle');
+        const trackWrapper = document.getElementById('trackWrapper');
+        const container = document.getElementById('container');
+        
+        let isPlaying = false;
+
+        function togglePlay() {
+            if (isPlaying) {
+                audio.pause();
+                playBtn.innerHTML = "▶";
+                isPlaying = false;
+            } else {
+                audio.play();
+                playBtn.innerHTML = "❚❚";
+                isPlaying = true;
+            }
+        }
+
+        function checkMarquee() {
+            // Rimuoviamo prima la classe per calcolare la larghezza reale del testo
+            trackWrapper.classList.remove('marquee');
+            
+            // Se il testo duplicato è presente, ripristiniamo il testo singolo originale
+            if (trackWrapper.dataset.originalText) {
+                trackTitle.innerText = trackWrapper.dataset.originalText;
+            }
+            
+            const textWidth = trackTitle.offsetWidth;
+            const containerWidth = container.clientWidth - 30; // Considerando il padding
+
+            if (textWidth > containerWidth) {
+                // Salviamo il testo originale
+                trackWrapper.dataset.originalText = trackTitle.innerText;
+                // Duplichiamo il testo per un loop fluido della marquee
+                trackTitle.innerHTML = trackTitle.innerText + " &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; " + trackTitle.innerText;
+                trackWrapper.classList.add('marquee');
+            }
+        }
+
+        async function updateNowPlaying() {
+            try {
+                const response = await fetch('current_track.json?_=' + new Date().getTime());
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.current_song) {
+                        if (trackTitle.innerText !== data.current_song) {
+                            trackTitle.innerText = data.current_song;
+                            checkMarquee();
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error("Errore recupero traccia:", e);
+            }
+        }
+
+        // Aggiorna subito e poi ogni 5 secondi
+        updateNowPlaying();
+        setInterval(updateNowPlaying, 5000);
+    </script>
+</body>
+</html>
 EOF
