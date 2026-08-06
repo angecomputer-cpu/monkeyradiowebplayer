@@ -2,177 +2,283 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Monkey Radio Italy - Player</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            background-color: #121212;
-            color: #ffffff;
+            background-color: #121212; color: #ffffff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            display: flex; justify-content: center; align-items: center; height: 100vh;
+            user-select: none;
         }
         .player-card {
-            background: #1e1e1e;
-            border-radius: 12px;
-            padding: 30px;
-            width: 350px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-            text-align: center;
-            border: 1px solid #333;
+            background: #1e1e1e; border-radius: 12px; padding: 30px;
+            width: 90%; max-width: 350px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            text-align: center; border: 1px solid #333;
+            display: flex; flex-direction: column; align-items: center;
         }
+        
+        /* Box Copertina Aggiunto al tuo Layout */
+        .cover-box {
+            width: 150px; height: 150px; border-radius: 12px;
+            margin-bottom: 20px; overflow: hidden; background: #000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            flex-shrink: 0;
+        }
+        .cover-box video, .cover-box img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        .cover-box img { display: none; }
+
         .station-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #ff9800;
-            margin-bottom: 20px;
-            letter-spacing: 1px;
+            font-size: 1.2rem; font-weight: 600; color: #ff9800;
+            margin-bottom: 20px; letter-spacing: 1px;
         }
         .now-playing-container {
-            background: #111;
-            border-radius: 8px;
-            padding: 12px 15px;
-            margin-bottom: 25px;
-            overflow: hidden;
-            white-space: nowrap;
-            position: relative;
-            border: 1px solid #2a2a2a;
+            background: #111; border-radius: 8px; padding: 12px 15px;
+            margin-bottom: 25px; overflow: hidden; white-space: nowrap;
+            position: relative; border: 1px solid #2a2a2a; width: 100%;
         }
         .now-playing-label {
-            font-size: 0.75rem;
-            color: #888;
-            text-transform: uppercase;
-            margin-bottom: 4px;
-            letter-spacing: 0.5px;
+            font-size: 0.75rem; color: #888; text-transform: uppercase;
+            margin-bottom: 4px; letter-spacing: 0.5px;
+            transition: color 0.3s;
         }
-        .track-wrapper {
-            display: inline-block;
-            white-space: nowrap;
-        }
+        .track-wrapper { display: inline-block; white-space: nowrap; }
         .track-title {
-            font-size: 1rem;
-            font-weight: 500;
-            color: #f1f1f1;
-            display: inline-block;
+            font-size: 1rem; font-weight: 500; color: #f1f1f1; display: inline-block;
         }
-        /* Animazione marquee attivata via JS solo se necessario */
-        .marquee {
-            animation: scrollText 10s linear infinite;
+        
+        /* Box Banane per Buffering */
+        #buffering-box {
+            display: none; font-size: 1.2rem; letter-spacing: 2px;
+            color: #ff9800; height: 21px;
         }
-        @keyframes scrollText {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-        }
+
+        .marquee { animation: scrollText 10s linear infinite; }
+        @keyframes scrollText { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
         .play-btn {
-            background-color: #ff9800;
-            color: #121212;
-            border: none;
-            border-radius: 50px;
-            width: 65px;
-            height: 65px;
-            font-size: 1.5rem;
-            cursor: pointer;
-            transition: background 0.2s, transform 0.1s;
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
+            background-color: #ff9800; color: #121212; border: none;
+            border-radius: 50px; width: 65px; height: 65px;
+            font-size: 1.5rem; cursor: pointer; transition: background 0.2s, transform 0.1s;
+            display: inline-flex; justify-content: center; align-items: center;
             box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
         }
-        .play-btn:hover {
-            background-color: #f57c00;
-            transform: scale(1.05);
-        }
-        .play-btn:active {
-            transform: scale(0.95);
-        }
+        .play-btn:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
 
     <div class="player-card">
+        
+        <!-- Box Copertina / Logo -->
+        <div class="cover-box">
+            <video id="coverVideo" src="https://assets.nicepagecdn.com/966432fa/6080027/files/OK_QR_NICE_LONG.mp4" autoplay loop muted playsinline></video>
+            <img id="coverImg" alt="Cover Brano">
+        </div>
+
         <div class="station-title">MONKEY RADIO ITALY</div>
         
         <div class="now-playing-container" id="container">
-            <div class="now-playing-label">In Onda Ora</div>
+            <div class="now-playing-label" id="statusLabel">In Onda Ora</div>
+            
             <div id="trackWrapper" class="track-wrapper">
-                <span id="trackTitle" class="track-title">Caricamento...</span>
+                <span id="trackTitle" class="track-title">Connessione...</span>
+            </div>
+            
+            <div id="buffering-box">
+                <span id="bananas"></span>
             </div>
         </div>
 
-        <audio id="radioStream" src="https://a11.asurahosting.com:8610/radio.mp3" preload="none"></audio>
+        <audio id="radioStream" crossorigin="anonymous" preload="none"></audio>
         
-        <button id="playBtn" class="play-btn" onclick="togglePlay()">▶</button>
+        <button id="playBtn" class="play-btn">▶</button>
     </div>
 
     <script>
+        // === CONFIGURAZIONE ===
+        const STREAM_URL = "https://a11.asurahosting.com:8610/radio.mp3";
+        // Punta diretto ad AzuraCast per la massima stabilità e aggiornamenti push
+        const STATUS_URL = "https://a11.asurahosting.com:8610/status-json.xsl";
+        const DEFAULT_VIDEO = "https://assets.nicepagecdn.com/966432fa/6080027/files/OK_QR_NICE_LONG.mp4";
+        const PAUSE_THRESHOLD = 30000; // 30 secondi
+
         const audio = document.getElementById('radioStream');
         const playBtn = document.getElementById('playBtn');
         const trackTitle = document.getElementById('trackTitle');
         const trackWrapper = document.getElementById('trackWrapper');
         const container = document.getElementById('container');
+        const statusLabel = document.getElementById('statusLabel');
+        const bufferingBox = document.getElementById('buffering-box');
+        const bananasEl = document.getElementById('bananas');
+        const coverVideo = document.getElementById('coverVideo');
+        const coverImg = document.getElementById('coverImg');
         
         let isPlaying = false;
+        let userIntentPlay = false;
+        let pauseTime = 0;
+        let reconnectTimer = null;
+        let bananaInterval = null;
+        let currentSongInfo = "Diretta Streaming";
+        let currentCoverUrl = null;
+        let wakeLock = null;
 
-        function togglePlay() {
-            if (isPlaying) {
-                audio.pause();
-                playBtn.innerHTML = "▶";
-                isPlaying = false;
-            } else {
-                audio.play();
-                playBtn.innerHTML = "❚❚";
-                isPlaying = true;
-            }
-        }
-
+        // === TESTO SCORREVOLE (MARQUEE) ===
         function checkMarquee() {
-            // Rimuoviamo prima la classe per calcolare la larghezza reale del testo
             trackWrapper.classList.remove('marquee');
-            
-            // Se il testo duplicato è presente, ripristiniamo il testo singolo originale
             if (trackWrapper.dataset.originalText) {
                 trackTitle.innerText = trackWrapper.dataset.originalText;
             }
-            
             const textWidth = trackTitle.offsetWidth;
-            const containerWidth = container.clientWidth - 30; // Considerando il padding
+            const containerWidth = container.clientWidth - 30;
 
             if (textWidth > containerWidth) {
-                // Salviamo il testo originale
                 trackWrapper.dataset.originalText = trackTitle.innerText;
-                // Duplichiamo il testo per un loop fluido della marquee
-                trackTitle.innerHTML = trackTitle.innerText + " &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; " + trackTitle.innerText;
+                trackTitle.innerHTML = trackTitle.innerText + " &nbsp;&nbsp;&nbsp;🐵&nbsp;&nbsp;&nbsp; " + trackTitle.innerText;
                 trackWrapper.classList.add('marquee');
             }
         }
 
+        // === FETCH BRANO DA ASURAHOSTING ===
         async function updateNowPlaying() {
             try {
-                const response = await fetch('current_track.json?_=' + new Date().getTime());
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data && data.current_song) {
-                        if (trackTitle.innerText !== data.current_song) {
-                            trackTitle.innerText = data.current_song;
-                            checkMarquee();
-                        }
-                    }
+                const response = await fetch(STATUS_URL + "?_=" + Date.now());
+                if (!response.ok) return;
+                const data = await response.json();
+                
+                let songName = "Diretta Streaming";
+                if (data.icestats && data.icestats.source) {
+                    const sources = Array.isArray(data.icestats.source) ? data.icestats.source : [data.icestats.source];
+                    const mount = sources.find(m => m.listenurl && m.listenurl.includes("/radio.mp3"));
+                    if (mount && mount.title) songName = mount.title;
                 }
-            } catch (e) {
-                console.error("Errore recupero traccia:", e);
+
+                if (songName !== currentSongInfo) {
+                    currentSongInfo = songName;
+                    await processNewSong(songName);
+                }
+            } catch (e) { console.error("Errore recupero traccia:", e); }
+        }
+
+        // === RICERCA COPERTINA ITUNES ===
+        async function processNewSong(songName) {
+            trackTitle.innerText = songName;
+            checkMarquee();
+            
+            let coverUrl = null;
+            if (songName !== "Diretta Streaming") {
+                try {
+                    const itunesRes = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(songName)}&entity=song&limit=1`);
+                    const itunesData = await itunesRes.json();
+                    if (itunesData.results && itunesData.results.length > 0) {
+                        coverUrl = itunesData.results[0].artworkUrl100.replace('100x100bb', '512x512bb');
+                    }
+                } catch (e) {}
+            }
+
+            if (coverUrl) { 
+                coverImg.src = coverUrl; coverImg.style.display = 'block'; 
+                coverVideo.style.display = 'none'; currentCoverUrl = coverUrl; 
+            } else { 
+                coverImg.style.display = 'none'; coverVideo.style.display = 'block'; 
+                currentCoverUrl = null; 
+            }
+
+            if (userIntentPlay || !audio.paused) updateMediaSession();
+        }
+
+        updateNowPlaying();
+        setInterval(updateNowPlaying, 10000);
+
+        // === BANANE (BUFFERING) ===
+        function startBananas() {
+            trackWrapper.style.display = 'none';
+            bufferingBox.style.display = 'block';
+            statusLabel.innerText = "BUFFERING";
+            statusLabel.style.color = "#ff9800";
+            
+            clearInterval(bananaInterval);
+            let bCount = 0;
+            bananaInterval = setInterval(() => {
+                bCount++;
+                if (bCount > 5) bCount = 1;
+                bananasEl.textContent = '🍌'.repeat(bCount);
+            }, 400);
+        }
+
+        function stopBananas() {
+            clearInterval(bananaInterval);
+            bufferingBox.style.display = 'none';
+            trackWrapper.style.display = 'inline-block';
+            statusLabel.innerText = "IN ONDA ORA";
+            statusLabel.style.color = "#888";
+        }
+
+        // === CONTROLLO AUDIO E CACHE BUST ===
+        function hardStop() { audio.pause(); audio.removeAttribute('src'); audio.load(); }
+
+        function setUIState(state) {
+            if (state === 'loading') { 
+                playBtn.innerHTML = "⌛"; startBananas(); 
+            } else if (state === 'playing') { 
+                playBtn.innerHTML = "❚❚"; stopBananas(); isPlaying = true;
+            } else if (state === 'stopped') { 
+                playBtn.innerHTML = "▶"; stopBananas(); isPlaying = false;
             }
         }
 
-        // Aggiorna subito e poi ogni 5 secondi
-        updateNowPlaying();
-        setInterval(updateNowPlaying, 5000);
+        function togglePlay() {
+            let now = Date.now();
+            if (!isPlaying) {
+                userIntentPlay = true;
+                setUIState('loading');
+                if (!audio.src || (now - pauseTime > PAUSE_THRESHOLD)) { 
+                    hardStop(); audio.src = `${STREAM_URL}?t=${now}`; 
+                }
+                audio.play().then(() => { 
+                    requestWakeLock(); updateMediaSession(); 
+                }).catch(() => { 
+                    userIntentPlay = false; setUIState('stopped'); 
+                });
+            } else {
+                userIntentPlay = false; pauseTime = Date.now(); 
+                clearTimeout(reconnectTimer); audio.pause(); 
+                setUIState('stopped'); releaseWakeLock();
+            }
+        }
+        playBtn.addEventListener('click', togglePlay);
+
+        // === STABILITA' CONNESSIONE E RECONNECT ===
+        function forceReconnect() {
+            if (!userIntentPlay) return;
+            setUIState('loading'); hardStop(); audio.src = `${STREAM_URL}?t=${Date.now()}`;
+            audio.play().catch(() => { reconnectTimer = setTimeout(forceReconnect, 3000); });
+        }
+        audio.addEventListener('error', () => { if (userIntentPlay) { clearTimeout(reconnectTimer); reconnectTimer = setTimeout(forceReconnect, 2000); } });
+        audio.addEventListener('waiting', () => { if (userIntentPlay) setUIState('loading'); });
+        audio.addEventListener('stalled', () => { if (userIntentPlay) { setUIState('loading'); clearTimeout(reconnectTimer); reconnectTimer = setTimeout(forceReconnect, 4000); } });
+        audio.addEventListener('playing', () => { if (userIntentPlay) { clearTimeout(reconnectTimer); setUIState('playing'); } });
+        audio.addEventListener('pause', () => { if (userIntentPlay && audio.readyState > 0) { userIntentPlay = false; pauseTime = Date.now(); clearTimeout(reconnectTimer); setUIState('stopped'); } });
+
+        // === MEDIA SESSION (BLUETOOTH E LOCKSCREEN) E WAKELOCK ===
+        function updateMediaSession() {
+            if ('mediaSession' in navigator) {
+                let title = currentSongInfo; let artist = "Monkey Radio Italy";
+                if (currentSongInfo.includes(" - ")) {
+                    let parts = currentSongInfo.split(" - "); artist = parts[0].trim(); title = parts.slice(1).join(" - ").trim();
+                }
+                let artworkArr = currentCoverUrl ? [ { src: currentCoverUrl, sizes: '512x512', type: 'image/jpeg' } ] : [ { src: DEFAULT_VIDEO, sizes: '512x512', type: 'video/mp4' } ];
+                navigator.mediaSession.metadata = new MediaMetadata({ title: title, artist: artist, album: 'Live Stream', artwork: artworkArr });
+                navigator.mediaSession.setActionHandler('play', togglePlay); navigator.mediaSession.setActionHandler('pause', togglePlay);
+            }
+        }
+        async function requestWakeLock() { if ('wakeLock' in navigator) { try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {} } }
+        function releaseWakeLock() { if (wakeLock !== null) { wakeLock.release(); wakeLock = null; } }
+        document.addEventListener('visibilitychange', async () => { if (wakeLock !== null && document.visibilityState === 'visible' && !audio.paused) await requestWakeLock(); });
+        window.addEventListener('resize', checkMarquee);
     </script>
 </body>
 </html>
