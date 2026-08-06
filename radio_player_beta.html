@@ -2,172 +2,288 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monkey Radio Italy - Player</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monkey Radio Italy Player</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            background-color: #121212; color: #ffffff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex; justify-content: center; align-items: center; height: 100vh;
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background: #ffffff !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #000000;
+            overflow: hidden;
             user-select: none;
         }
-        .player-card {
-            background: #1e1e1e; border-radius: 12px; padding: 30px;
-            width: 90%; max-width: 350px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-            text-align: center; border: 1px solid #333;
-            display: flex; flex-direction: column; align-items: center;
+
+        .player-bar {
+            width: 100%;
+            height: 100%;
+            padding: 0 15px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            background: #ffffff !important;
         }
-        
-        /* Box Copertina Aggiunto al tuo Layout */
-        .cover-box {
-            width: 150px; height: 150px; border-radius: 12px;
-            margin-bottom: 20px; overflow: hidden; background: #000;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+
+        /* --- BOX COVER/LOGO --- */
+        .logo-box {
+            width: 80px;  
+            height: 100%; 
+            border-radius: 0;
+            overflow: hidden;
+            background: #000000;
+            flex-shrink: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .logo-box video, .logo-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .logo-box img {
+            display: none; /* Appare via JS se trova la copertina */
+        }
+
+        /* --- INFO BRANO E TESTI --- */
+        .info-box {
+            flex-grow: 1;
+            min-width: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 2px;
+        }
+
+        .scroll-container {
+            width: 100%;
+            overflow: hidden;
+            white-space: nowrap;
+            text-align: left;
+        }
+        .scroll-wrapper {
+            display: inline-flex;
+            align-items: center;
+            white-space: nowrap;
+            will-change: transform;
+            justify-content: flex-start;
+        }
+
+        .info-box h2 {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #000000;
+            line-height: 1.2;
+        }
+        .info-box p {
+            font-size: 0.8rem;
+            color: #555555;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .text-item {
+            white-space: nowrap;
+            padding-right: 0;
+        }
+        .is-scrolling {
+            animation: marquee 12s linear infinite;
+        }
+        @keyframes marquee {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-50%, 0, 0); }
+        }
+
+        /* --- UI BUFFERING (LE BANANE) --- */
+        #buffering-box {
+            display: none; /* Attivato via JS */
+            flex-direction: row;
+            align-items: center;
+            width: 100%;
+            height: 15px; /* Mantiene l'allineamento con il tag <p> originale */
+        }
+        .buf-label {
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: #ffa500;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .buf-bananas {
+            font-size: 0.8rem;
+            margin-left: 5px;
+            white-space: nowrap;
+        }
+
+        /* --- PULSANTI E BADGE --- */
+        .actions-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
             flex-shrink: 0;
         }
-        .cover-box video, .cover-box img {
-            width: 100%; height: 100%; object-fit: cover;
-        }
-        .cover-box img { display: none; }
-
-        .station-title {
-            font-size: 1.2rem; font-weight: 600; color: #ff9800;
-            margin-bottom: 20px; letter-spacing: 1px;
-        }
-        .now-playing-container {
-            background: #111; border-radius: 8px; padding: 12px 15px;
-            margin-bottom: 25px; overflow: hidden; white-space: nowrap;
-            position: relative; border: 1px solid #2a2a2a; width: 100%;
-        }
-        .now-playing-label {
-            font-size: 0.75rem; color: #888; text-transform: uppercase;
-            margin-bottom: 4px; letter-spacing: 0.5px;
-            transition: color 0.3s;
-        }
-        .track-wrapper { display: inline-block; white-space: nowrap; }
-        .track-title {
-            font-size: 1rem; font-weight: 500; color: #f1f1f1; display: inline-block;
-        }
-        
-        /* Box Banane per Buffering */
-        #buffering-box {
-            display: none; font-size: 1.2rem; letter-spacing: 2px;
-            color: #ff9800; height: 21px;
-        }
-
-        .marquee { animation: scrollText 10s linear infinite; }
-        @keyframes scrollText { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
         .play-btn {
-            background-color: #ff9800; color: #121212; border: none;
-            border-radius: 50px; width: 65px; height: 65px;
-            font-size: 1.5rem; cursor: pointer; transition: background 0.2s, transform 0.1s;
-            display: inline-flex; justify-content: center; align-items: center;
-            box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+            background: #000000; 
+            border: none;
+            color: #ffffff; 
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+            transition: transform 0.1s ease;
         }
-        .play-btn:active { transform: scale(0.95); }
+        .play-btn:active { transform: scale(0.92); }
+        .play-btn svg { width: 20px; height: 20px; fill: currentColor; }
+
+        @keyframes spin-anim { 100% { transform: rotate(360deg); } }
+        .spin { animation: spin-anim 1s linear infinite; transform-origin: center; }
+
+        .status-badge {
+            font-size: 0.65rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-align: center;
+            color: #ffffff;
+            background: #555555;
+            transition: background-color 0.3s ease;
+        }
     </style>
 </head>
 <body>
 
-    <div class="player-card">
-        
-        <!-- Box Copertina / Logo -->
-        <div class="cover-box">
-            <video id="coverVideo" src="https://assets.nicepagecdn.com/966432fa/6080027/files/OK_QR_NICE_LONG.mp4" autoplay loop muted playsinline></video>
-            <img id="coverImg" alt="Cover Brano">
+    <div class="player-bar">
+        <!-- Logo Video o Copertina -->
+        <div class="logo-box">
+            <video id="coverVideo" src="https://assets.nicepagecdn.com/966432fa/6080027/files/OK_QR_NICE_LONG.mp4" preload="auto" loop muted playsinline autoplay></video>
+            <img id="coverImg" alt="Cover">
         </div>
 
-        <div class="station-title">MONKEY RADIO ITALY</div>
-        
-        <div class="now-playing-container" id="container">
-            <div class="now-playing-label" id="statusLabel">In Onda Ora</div>
-            
-            <div id="trackWrapper" class="track-wrapper">
-                <span id="trackTitle" class="track-title">Connessione...</span>
+        <div class="info-box">
+            <!-- TITOLO RADIO SEMPRE VISIBILE -->
+            <div class="scroll-container" id="title-container">
+                <div class="scroll-wrapper" id="title-wrapper">
+                    <h2><span class="text-item" id="main-title">Monkey Radio Italy</span></h2>
+                </div>
             </div>
             
+            <!-- TITOLO BRANO (Scompare durante il buffering) -->
+            <div class="scroll-container" id="track-container">
+                <div class="scroll-wrapper" id="track-wrapper">
+                    <p><span class="text-item" id="track-title">Diretta Streaming</span></p>
+                </div>
+            </div>
+
+            <!-- LE BANANE (Appaiono durante il caricamento) -->
             <div id="buffering-box">
-                <span id="bananas"></span>
+                <div class="buf-label">WAIT</div>
+                <div class="buf-bananas" id="bananas"></div>
             </div>
         </div>
 
-        <audio id="radioStream" crossorigin="anonymous" preload="none"></audio>
-        
-        <button id="playBtn" class="play-btn">▶</button>
+        <div class="actions-box">
+            <div class="status-badge" id="statusTag">STOP</div>
+            <button class="play-btn" id="playBtn" aria-label="Riproduci">
+                <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </button>
+        </div>
     </div>
 
-    <script>
-        // === CONFIGURAZIONE ===
-        const STREAM_URL = "https://a11.asurahosting.com:8610/radio.mp3";
-        // Punta diretto ad AzuraCast per la massima stabilità e aggiornamenti push
-        const STATUS_URL = "https://a11.asurahosting.com:8610/status-json.xsl";
-        const DEFAULT_VIDEO = "https://assets.nicepagecdn.com/966432fa/6080027/files/OK_QR_NICE_LONG.mp4";
-        const PAUSE_THRESHOLD = 30000; // 30 secondi
+    <audio id="audioStream" crossorigin="anonymous" preload="none"></audio>
 
-        const audio = document.getElementById('radioStream');
+    <script>
+        // === CONFIGURAZIONI CORE ===
+        const STREAM_URL = "https://a11.asurahosting.com:8610/radio.mp3";
+        const STATUS_JSON_URL = "https://a11.asurahosting.com:8610/status-json.xsl"; // API Pubblica Server Radio
+        const DEFAULT_VIDEO = "https://assets.nicepagecdn.com/966432fa/6080027/files/OK_QR_NICE_LONG.mp4";
+        const PAUSE_THRESHOLD = 30000; // 30 sec
+
+        // Elementi DOM
+        const audio = document.getElementById('audioStream');
         const playBtn = document.getElementById('playBtn');
-        const trackTitle = document.getElementById('trackTitle');
-        const trackWrapper = document.getElementById('trackWrapper');
-        const container = document.getElementById('container');
-        const statusLabel = document.getElementById('statusLabel');
+        const playIcon = document.getElementById('playIcon');
+        const statusTag = document.getElementById('statusTag');
+        const titleContainer = document.getElementById('title-container');
+        const titleWrapper = document.getElementById('title-wrapper');
+        const trackContainer = document.getElementById('track-container');
+        const trackWrapper = document.getElementById('track-wrapper');
         const bufferingBox = document.getElementById('buffering-box');
         const bananasEl = document.getElementById('bananas');
         const coverVideo = document.getElementById('coverVideo');
         const coverImg = document.getElementById('coverImg');
-        
-        let isPlaying = false;
-        let userIntentPlay = false;
-        let pauseTime = 0;
-        let reconnectTimer = null;
-        let bananaInterval = null;
-        let currentSongInfo = "Diretta Streaming";
-        let currentCoverUrl = null;
-        let wakeLock = null;
 
-        // === TESTO SCORREVOLE (MARQUEE) ===
-        function checkMarquee() {
-            trackWrapper.classList.remove('marquee');
-            if (trackWrapper.dataset.originalText) {
-                trackTitle.innerText = trackWrapper.dataset.originalText;
-            }
-            const textWidth = trackTitle.offsetWidth;
-            const containerWidth = container.clientWidth - 30;
+        // SVG
+        const playSVG = '<path d="M8 5v14l11-7z"/>';
+        const pauseSVG = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+        const spinnerSVG = '<path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>';
 
-            if (textWidth > containerWidth) {
-                trackWrapper.dataset.originalText = trackTitle.innerText;
-                trackTitle.innerHTML = trackTitle.innerText + " &nbsp;&nbsp;&nbsp;🐵&nbsp;&nbsp;&nbsp; " + trackTitle.innerText;
-                trackWrapper.classList.add('marquee');
+        let wakeLock = null; let userIntentPlay = false; let reconnectTimer = null;
+        let pauseTime = 0; let bananaInterval = null;
+        let currentSongInfo = "Diretta Streaming"; let currentCoverUrl = null;
+
+        // === 1. TESTI SCORREVOLI ===
+        function applySmartMarquee(container, wrapper, idPrefix, originalText) {
+            wrapper.classList.remove('is-scrolling'); wrapper.innerHTML = '';
+            const item = document.createElement('span');
+            item.className = 'text-item'; item.id = idPrefix; 
+            item.textContent = originalText; item.style.paddingRight = "0px";
+            wrapper.appendChild(item);
+
+            if (item.offsetWidth > container.offsetWidth) {
+                item.textContent = originalText + '  🐵  '; item.style.paddingRight = "30px";
+                wrapper.appendChild(item.cloneNode(true));
+                wrapper.classList.add('is-scrolling');
             }
         }
+        function updateTexts(songText) {
+            applySmartMarquee(titleContainer, titleWrapper, 'main-title', "Monkey Radio Italy");
+            applySmartMarquee(trackContainer, trackWrapper, 'track-title', songText);
+        }
+        window.addEventListener('resize', () => updateTexts(currentSongInfo));
 
-        // === FETCH BRANO DA ASURAHOSTING ===
-        async function updateNowPlaying() {
+        // === 2. LETTURA TITOLO DA ASURAHOSTING ===
+        async function fetchSongData() {
             try {
-                const response = await fetch(STATUS_URL + "?_=" + Date.now());
-                if (!response.ok) return;
-                const data = await response.json();
-                
-                let songName = "Diretta Streaming";
+                // Legge la API nativa del server senza alcun limite di quota.
+                const res = await fetch(STATUS_JSON_URL + "?_=" + Date.now());
+                if (!res.ok) return;
+                const data = await res.json();
+                let rawInfo = "Diretta Streaming";
+
                 if (data.icestats && data.icestats.source) {
                     const sources = Array.isArray(data.icestats.source) ? data.icestats.source : [data.icestats.source];
                     const mount = sources.find(m => m.listenurl && m.listenurl.includes("/radio.mp3"));
-                    if (mount && mount.title) songName = mount.title;
+                    if (mount && mount.title) rawInfo = mount.title;
                 }
 
-                if (songName !== currentSongInfo) {
-                    currentSongInfo = songName;
-                    await processNewSong(songName);
+                if (rawInfo !== currentSongInfo) {
+                    currentSongInfo = rawInfo;
+                    await processNewSong(rawInfo);
                 }
-            } catch (e) { console.error("Errore recupero traccia:", e); }
+            } catch (err) { console.error("API Server non raggiungibile:", err); }
         }
 
-        // === RICERCA COPERTINA ITUNES ===
+        // === 3. RICERCA COVER SU ITUNES ===
         async function processNewSong(songName) {
-            trackTitle.innerText = songName;
-            checkMarquee();
-            
             let coverUrl = null;
             if (songName !== "Diretta Streaming") {
                 try {
@@ -178,7 +294,6 @@
                     }
                 } catch (e) {}
             }
-
             if (coverUrl) { 
                 coverImg.src = coverUrl; coverImg.style.display = 'block'; 
                 coverVideo.style.display = 'none'; currentCoverUrl = coverUrl; 
@@ -186,72 +301,52 @@
                 coverImg.style.display = 'none'; coverVideo.style.display = 'block'; 
                 currentCoverUrl = null; 
             }
-
+            updateTexts(songName);
             if (userIntentPlay || !audio.paused) updateMediaSession();
         }
 
-        updateNowPlaying();
-        setInterval(updateNowPlaying, 10000);
+        setInterval(fetchSongData, 10000); fetchSongData();
 
-        // === BANANE (BUFFERING) ===
+        // === 4. UI BANANE & STATI ===
         function startBananas() {
-            trackWrapper.style.display = 'none';
-            bufferingBox.style.display = 'block';
-            statusLabel.innerText = "BUFFERING";
-            statusLabel.style.color = "#ff9800";
-            
-            clearInterval(bananaInterval);
-            let bCount = 0;
+            trackContainer.style.display = 'none';
+            bufferingBox.style.display = 'flex';
+            clearInterval(bananaInterval); let bCount = 0;
             bananaInterval = setInterval(() => {
                 bCount++;
-                if (bCount > 5) bCount = 1;
+                const maxBananas = window.innerWidth <= 480 ? 3 : 6;
+                if (bCount > maxBananas) bCount = 1; 
                 bananasEl.textContent = '🍌'.repeat(bCount);
             }, 400);
         }
-
         function stopBananas() {
             clearInterval(bananaInterval);
             bufferingBox.style.display = 'none';
-            trackWrapper.style.display = 'inline-block';
-            statusLabel.innerText = "IN ONDA ORA";
-            statusLabel.style.color = "#888";
+            trackContainer.style.display = 'block';
         }
-
-        // === CONTROLLO AUDIO E CACHE BUST ===
-        function hardStop() { audio.pause(); audio.removeAttribute('src'); audio.load(); }
-
+        function setStatus(text, color) { statusTag.innerText = text; statusTag.style.background = color; }
+        
         function setUIState(state) {
-            if (state === 'loading') { 
-                playBtn.innerHTML = "⌛"; startBananas(); 
-            } else if (state === 'playing') { 
-                playBtn.innerHTML = "❚❚"; stopBananas(); isPlaying = true;
-            } else if (state === 'stopped') { 
-                playBtn.innerHTML = "▶"; stopBananas(); isPlaying = false;
-            }
+            if (state === 'loading') { playIcon.innerHTML = spinnerSVG; playIcon.classList.add('spin'); setStatus("WAIT", "#ffa500"); startBananas(); } 
+            else if (state === 'playing') { playIcon.innerHTML = pauseSVG; playIcon.classList.remove('spin'); setStatus("LIVE", "#e53e3e"); stopBananas(); } 
+            else if (state === 'stopped') { playIcon.innerHTML = playSVG; playIcon.classList.remove('spin'); setStatus("STOP", "#555555"); stopBananas(); }
         }
 
+        // === 5. GESTIONE STREAM AUDIO (SMART PAUSE) ===
+        function hardStop() { audio.pause(); audio.removeAttribute('src'); audio.load(); }
         function togglePlay() {
             let now = Date.now();
-            if (!isPlaying) {
-                userIntentPlay = true;
-                setUIState('loading');
-                if (!audio.src || (now - pauseTime > PAUSE_THRESHOLD)) { 
-                    hardStop(); audio.src = `${STREAM_URL}?t=${now}`; 
-                }
-                audio.play().then(() => { 
-                    requestWakeLock(); updateMediaSession(); 
-                }).catch(() => { 
-                    userIntentPlay = false; setUIState('stopped'); 
-                });
+            if (!userIntentPlay) {
+                userIntentPlay = true; setUIState('loading');
+                if (!audio.src || (now - pauseTime > PAUSE_THRESHOLD)) { hardStop(); audio.src = `${STREAM_URL}?t=${now}`; }
+                audio.play().then(() => { requestWakeLock(); updateMediaSession(); }).catch(err => { userIntentPlay = false; setUIState('stopped'); });
             } else {
-                userIntentPlay = false; pauseTime = Date.now(); 
-                clearTimeout(reconnectTimer); audio.pause(); 
-                setUIState('stopped'); releaseWakeLock();
+                userIntentPlay = false; pauseTime = Date.now(); clearTimeout(reconnectTimer); audio.pause(); setUIState('stopped'); releaseWakeLock();
             }
         }
         playBtn.addEventListener('click', togglePlay);
 
-        // === STABILITA' CONNESSIONE E RECONNECT ===
+        // === 6. AUTO RECONNECT DI RETE ===
         function forceReconnect() {
             if (!userIntentPlay) return;
             setUIState('loading'); hardStop(); audio.src = `${STREAM_URL}?t=${Date.now()}`;
@@ -263,22 +358,26 @@
         audio.addEventListener('playing', () => { if (userIntentPlay) { clearTimeout(reconnectTimer); setUIState('playing'); } });
         audio.addEventListener('pause', () => { if (userIntentPlay && audio.readyState > 0) { userIntentPlay = false; pauseTime = Date.now(); clearTimeout(reconnectTimer); setUIState('stopped'); } });
 
-        // === MEDIA SESSION (BLUETOOTH E LOCKSCREEN) E WAKELOCK ===
+        // === 7. BLUETOOTH E LOCKSCREEN (MEDIA SESSION API) ===
         function updateMediaSession() {
             if ('mediaSession' in navigator) {
                 let title = currentSongInfo; let artist = "Monkey Radio Italy";
                 if (currentSongInfo.includes(" - ")) {
                     let parts = currentSongInfo.split(" - "); artist = parts[0].trim(); title = parts.slice(1).join(" - ").trim();
-                }
+                } else if (currentSongInfo !== "Diretta Streaming") { artist = "In Diretta"; }
                 let artworkArr = currentCoverUrl ? [ { src: currentCoverUrl, sizes: '512x512', type: 'image/jpeg' } ] : [ { src: DEFAULT_VIDEO, sizes: '512x512', type: 'video/mp4' } ];
-                navigator.mediaSession.metadata = new MediaMetadata({ title: title, artist: artist, album: 'Live Stream', artwork: artworkArr });
+                navigator.mediaSession.metadata = new MediaMetadata({ title: title, artist: artist, album: 'Monkey Radio', artwork: artworkArr });
                 navigator.mediaSession.setActionHandler('play', togglePlay); navigator.mediaSession.setActionHandler('pause', togglePlay);
             }
         }
+        
+        // === 8. PREVENZIONE STANDBY SCHERMO ===
         async function requestWakeLock() { if ('wakeLock' in navigator) { try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {} } }
         function releaseWakeLock() { if (wakeLock !== null) { wakeLock.release(); wakeLock = null; } }
         document.addEventListener('visibilitychange', async () => { if (wakeLock !== null && document.visibilityState === 'visible' && !audio.paused) await requestWakeLock(); });
-        window.addEventListener('resize', checkMarquee);
+        
+        // Inizializza testi
+        window.addEventListener('DOMContentLoaded', () => updateTexts("Diretta Streaming"));
     </script>
 </body>
 </html>
