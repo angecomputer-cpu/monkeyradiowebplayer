@@ -12,7 +12,7 @@
             background-color: transparent; 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             display: flex; justify-content: center; align-items: center; 
-            min-height: 350px; /* Altezza minima per contenere la cover su desktop */
+            min-height: 350px; 
             user-select: none;
         }
 
@@ -22,9 +22,9 @@
         .player-wrapper {
             position: relative;
             width: 100%;
-            max-width: 800px; /* Si adatta perfettamente alle griglie centrali di Nicepage */
-            height: 80px; /* Altezza della barra bianca */
-            margin: 200px auto 40px auto; /* Enorme margine sopra per far sbucare la cover da 250px */
+            max-width: 800px; /* Si adatta perfettamente alle griglie centrali */
+            height: 60px; /* <--- PLAYER RESO PIU' FINO (era 80px) */
+            margin: 200px auto 40px auto; 
         }
 
         /* =======================================
@@ -33,15 +33,14 @@
         .player-bar {
             position: absolute;
             top: 0; right: 0;
-            /* La barra viene ristretta e incollata a destra, lasciando il vuoto a sx per la cover */
             width: calc(100% - 100px); 
             height: 100%;
             background: #ffffff;
             border-radius: 12px;
             z-index: 10; /* Sempre DAVANTI alla cover */
             display: flex; align-items: center; justify-content: space-between;
-            padding: 0 20px 0 170px; /* 170px di vuoto a sinistra per non scrivere sopra la cover da 250px */
-            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            padding: 0 15px 0 170px; /* Spazio a sinistra per non coprire la cover */
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15); /* Leggera ombra solo per la barra */
         }
 
         /* =======================================
@@ -49,11 +48,11 @@
            ======================================= */
         .cover-mask {
             position: absolute;
-            left: -30px; /* Margine per non tagliare l'ombra a sinistra */
-            bottom: 15px; /* IL SEGRETO: La maschera finisce esattamente a 15px da terra, nascondendosi dietro la barra */
+            left: -30px; 
+            bottom: 10px; /* <--- Adattato per la barra più fina */
             width: 350px; 
             height: 400px;
-            overflow: hidden; /* Tutto ciò che va sotto il bottom scompare nel nulla! */
+            overflow: hidden; /* Taglia l'immagine che cade in basso */
             z-index: 1; /* DIETRO la barra bianca */
             pointer-events: none;
         }
@@ -63,12 +62,12 @@
            ======================================= */
         .cover-stage {
             position: absolute;
-            left: 30px; /* Compensa il -30px della maschera */
+            left: 30px; 
             bottom: 0; 
-            width: 250px; /* GRANDEZZA RICHIESTA */
+            width: 250px; /* GRANDEZZA MANTENUTA */
             height: 250px;
             border-radius: 12px;
-            box-shadow: -10px 15px 35px rgba(0,0,0,0.3); /* Ombra profonda a sinistra */
+            box-shadow: none; /* <--- OMBRA DELLA COVER RIMOSSA */
             background-color: #000;
         }
 
@@ -78,58 +77,64 @@
             width: 100%; height: 100%;
             object-fit: cover;
             border-radius: 12px;
-            /* L'EFFETTO MOLLA (Cade e Rimbalza in su) */
+            /* L'EFFETTO MOLLA */
             transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
 
         /* Classi usate dal JS per l'animazione */
-        .cover-hidden { transform: translateY(110%); } /* Sprofonda e sparisce grazie alla maschera */
-        .cover-visible { transform: translateY(0); }   /* Torna su al suo posto */
+        .cover-hidden { transform: translateY(110%); } 
+        .cover-visible { transform: translateY(0); }   
 
         /* =======================================
            INFO BRANO E ANIMAZIONI
            ======================================= */
         .info-box {
             flex-grow: 1; min-width: 0; overflow: hidden;
-            display: flex; flex-direction: column; justify-content: center; gap: 2px;
+            display: flex; flex-direction: column; justify-content: center; gap: 0px;
         }
         .scroll-container { width: 100%; overflow: hidden; white-space: nowrap; text-align: left; }
         .scroll-wrapper { display: inline-flex; align-items: center; white-space: nowrap; }
-        .info-box h2 { font-size: 1.1rem; font-weight: 800; color: #000; line-height: 1.2; }
-        .info-box p { font-size: 0.85rem; color: #555; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+        
+        /* Testi leggermente rimpiccioliti per la barra slim */
+        .info-box h2 { font-size: 1rem; font-weight: 800; color: #000; line-height: 1.2; }
+        .info-box p { font-size: 0.8rem; color: #555; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
         .text-item { white-space: nowrap; padding-right: 0; }
+        
         .is-scrolling { animation: marquee 12s linear infinite; }
         @keyframes marquee { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-50%, 0, 0); } }
 
         #buffering-box { display: none; flex-direction: row; align-items: center; width: 100%; height: 16px; }
-        .buf-label { font-size: 0.85rem; font-weight: 800; color: #ffa500; text-transform: uppercase; }
-        .buf-bananas { font-size: 0.85rem; margin-left: 5px; white-space: nowrap; }
+        .buf-label { font-size: 0.8rem; font-weight: 800; color: #ffa500; text-transform: uppercase; }
+        .buf-bananas { font-size: 0.8rem; margin-left: 5px; white-space: nowrap; }
 
         /* =======================================
            PULSANTI E BADGE
            ======================================= */
-        .actions-box { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
-        .status-badge { font-size: 0.7rem; padding: 5px 10px; border-radius: 4px; font-weight: 700; color: #fff; background: #555; }
+        .actions-box { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+        .status-badge { font-size: 0.65rem; padding: 4px 8px; border-radius: 4px; font-weight: 700; color: #fff; background: #555; }
+        
+        /* Bottone rimpicciolito proporzionalmente */
         .play-btn {
-            background: #000; color: #fff; width: 50px; height: 50px;
+            background: #000; color: #fff; width: 42px; height: 42px;
             border: none; border-radius: 50%; cursor: pointer; display: flex;
             justify-content: center; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
             transition: transform 0.1s ease;
         }
         .play-btn:active { transform: scale(0.92); }
-        .play-btn svg { width: 22px; height: 22px; fill: currentColor; }
+        .play-btn svg { width: 18px; height: 18px; fill: currentColor; }
+        
         @keyframes spin-anim { 100% { transform: rotate(360deg); } }
         .spin { animation: spin-anim 1s linear infinite; }
 
         /* =======================================
-           ADATTAMENTO MOBILE (Previene rotture su schermi piccoli)
+           ADATTAMENTO MOBILE
            ======================================= */
         @media (max-width: 650px) {
-            .player-wrapper { margin-top: 150px; height: 70px; width: 95%; }
+            .player-wrapper { margin-top: 150px; height: 60px; width: 95%; }
             .player-bar { width: calc(100% - 40px); padding: 0 15px 0 115px; }
             .cover-mask { left: -15px; width: 200px; height: 250px; bottom: 10px; }
             .cover-stage { left: 15px; width: 130px; height: 130px; }
-            .info-box h2 { font-size: 0.95rem; }
+            .info-box h2 { font-size: 0.9rem; }
             .info-box p { font-size: 0.75rem; }
         }
     </style>
@@ -142,9 +147,9 @@
         <div class="cover-mask">
             <!-- PALCOSCENICO COPERTINE (Dietro la barra) -->
             <div class="cover-stage">
-                <!-- Immagine A (Visibile all'avvio) -->
+                <!-- Immagine A -->
                 <img id="cover-a" class="cover-art cover-visible" src="https://assets.nicepagecdn.com/966432fa/6080027/images/monkey_radio500_exzpanded.png" alt="Monkey Cover">
-                <!-- Immagine B (Nascosta in basso in attesa della molla) -->
+                <!-- Immagine B (Nascosta) -->
                 <img id="cover-b" class="cover-art cover-hidden" src="" alt="Album Cover">
             </div>
         </div>
@@ -181,7 +186,7 @@
         // === CONFIGURAZIONI CORE ===
         const STREAM_URL = "https://a11.asurahosting.com:8610/radio.mp3";
         const STATUS_JSON_URL = "https://a11.asurahosting.com:8610/status-json.xsl";
-        const DEFAULT_COVER = "https://assets.nicepagecdn.com/966432fa/6080027/images/monkey_radio500_exzpanded.png"; // La tua scimmia HD
+        const DEFAULT_COVER = "https://assets.nicepagecdn.com/966432fa/6080027/images/monkey_radio500_exzpanded.png"; 
         const PAUSE_THRESHOLD = 30000;
 
         const audio = document.getElementById('audioStream');
@@ -193,7 +198,6 @@
         const bufferingBox = document.getElementById('buffering-box');
         const bananasEl = document.getElementById('bananas');
         
-        // Elementi Copertina (A e B per l'effetto Molla incrociato)
         const coverA = document.getElementById('cover-a');
         const coverB = document.getElementById('cover-b');
         let activeCover = 'A'; 
@@ -205,23 +209,23 @@
         let userIntentPlay = false; let reconnectTimer = null; let pauseTime = 0; let bananaInterval = null;
         let currentSongInfo = "Diretta Streaming"; let currentCoverUrl = null;
 
-        // === SWAP ANIMATO COPERTINA (Molla) ===
+        // === SWAP ANIMATO COPERTINA ===
         function swapCover(newUrl) {
             const incomingUrl = newUrl || DEFAULT_COVER;
             if (activeCover === 'A') {
                 coverB.src = incomingUrl;
-                coverA.classList.replace('cover-visible', 'cover-hidden'); // Cade
-                coverB.classList.replace('cover-hidden', 'cover-visible'); // Rimbalza
+                coverA.classList.replace('cover-visible', 'cover-hidden'); 
+                coverB.classList.replace('cover-hidden', 'cover-visible'); 
                 activeCover = 'B';
             } else {
                 coverA.src = incomingUrl;
-                coverB.classList.replace('cover-visible', 'cover-hidden'); // Cade
-                coverA.classList.replace('cover-hidden', 'cover-visible'); // Rimbalza
+                coverB.classList.replace('cover-visible', 'cover-hidden'); 
+                coverA.classList.replace('cover-hidden', 'cover-visible'); 
                 activeCover = 'A';
             }
         }
 
-        // === MARQUEE TESTO SCORREVOLE ===
+        // === MARQUEE TESTO ===
         function applyMarquee(originalText) {
             trackWrapper.classList.remove('is-scrolling'); trackWrapper.innerHTML = '';
             const item = document.createElement('span'); item.className = 'text-item'; 
@@ -252,7 +256,7 @@
             } catch (err) {}
         }
 
-        // === RICERCA COPERTINA SU ITUNES ===
+        // === RICERCA ITUNES ===
         async function processNewSong(songName) {
             let coverUrl = null;
             if (songName !== "Diretta Streaming") {
@@ -265,12 +269,11 @@
                 } catch (e) {}
             }
             currentCoverUrl = coverUrl;
-            swapCover(coverUrl); // Lancia l'animazione!
+            swapCover(coverUrl);
             applyMarquee(songName);
             if (userIntentPlay || !audio.paused) updateMediaSession();
         }
 
-        // Timer di lettura a latenza zero
         setInterval(fetchSongData, 10000); fetchSongData();
 
         // === UI BANANE E STATI ===
@@ -288,7 +291,7 @@
             else if (state === 'stopped') { playIcon.innerHTML = playSVG; playIcon.classList.remove('spin'); setStatus("STOP", "#555"); stopBananas(); }
         }
 
-        // === GESTIONE STREAM AUDIO E SMART PAUSE ===
+        // === GESTIONE STREAM ===
         function hardStop() { audio.pause(); audio.removeAttribute('src'); audio.load(); }
         playBtn.addEventListener('click', () => {
             let now = Date.now();
@@ -301,7 +304,7 @@
             }
         });
 
-        // === AUTO-RECONNECT ===
+        // === RECONNECT ===
         function forceReconnect() {
             if (!userIntentPlay) return; setUIState('loading'); hardStop(); audio.src = `${STREAM_URL}?t=${Date.now()}`;
             audio.play().catch(() => { reconnectTimer = setTimeout(forceReconnect, 3000); });
@@ -312,7 +315,7 @@
         audio.addEventListener('playing', () => { if (userIntentPlay) { clearTimeout(reconnectTimer); setUIState('playing'); } });
         audio.addEventListener('pause', () => { if (userIntentPlay && audio.readyState > 0) { userIntentPlay = false; pauseTime = Date.now(); clearTimeout(reconnectTimer); setUIState('stopped'); } });
 
-        // === BLUETOOTH / LOCKSCREEN (MEDIA SESSION API) E WAKELOCK ===
+        // === MEDIA SESSION & WAKELOCK ===
         function updateMediaSession() {
             if ('mediaSession' in navigator) {
                 let title = currentSongInfo; let artist = "Monkey Radio Italy";
