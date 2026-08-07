@@ -8,7 +8,6 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            /* Sfondo trasparente per integrarsi nel giallo di Nicepage */
             background-color: transparent; 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             display: flex; justify-content: center; align-items: center; 
@@ -17,14 +16,14 @@
         }
 
         /* =======================================
-           STRUTTURA BASE NICEPAGE
+           STRUTTURA WIDGET COMPATTA E OTTIMIZZATA
            ======================================= */
         .player-wrapper {
             position: relative;
             width: 100%;
-            max-width: 800px; /* Si adatta perfettamente alle griglie centrali */
-            height: 60px; /* <--- PLAYER RESO PIU' FINO (era 80px) */
-            margin: 200px auto 40px auto; 
+            max-width: 560px; /* Leggermente più stretto per raggruppare gli elementi */
+            height: 60px; 
+            margin: 180px auto 40px auto; 
         }
 
         /* =======================================
@@ -33,14 +32,15 @@
         .player-bar {
             position: absolute;
             top: 0; right: 0;
-            width: calc(100% - 100px); 
+            width: calc(100% - 90px); /* La barra inizia un po' più a sinistra */
             height: 100%;
             background: #ffffff;
             border-radius: 12px;
-            z-index: 10; /* Sempre DAVANTI alla cover */
+            z-index: 10; 
             display: flex; align-items: center; justify-content: space-between;
-            padding: 0 15px 0 170px; /* Spazio a sinistra per non coprire la cover */
-            box-shadow: 0 8px 30px rgba(0,0,0,0.15); /* Leggera ombra solo per la barra */
+            /* IL SEGRETO È QUI: Padding sinistro ridotto per incollare il testo alla cover! */
+            padding: 0 15px 0 125px; 
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15); 
         }
 
         /* =======================================
@@ -48,12 +48,12 @@
            ======================================= */
         .cover-mask {
             position: absolute;
-            left: -30px; 
-            bottom: 10px; /* <--- Adattato per la barra più fina */
-            width: 350px; 
+            left: -20px; 
+            bottom: 10px; 
+            width: 320px; 
             height: 400px;
-            overflow: hidden; /* Taglia l'immagine che cade in basso */
-            z-index: 1; /* DIETRO la barra bianca */
+            overflow: hidden; 
+            z-index: 1; 
             pointer-events: none;
         }
 
@@ -62,12 +62,11 @@
            ======================================= */
         .cover-stage {
             position: absolute;
-            left: 30px; 
+            left: 20px; 
             bottom: 0; 
-            width: 250px; /* GRANDEZZA MANTENUTA */
-            height: 250px;
+            width: 220px; /* Ottimizzata per non "mangiare" la barra */
+            height: 220px;
             border-radius: 12px;
-            box-shadow: none; /* <--- OMBRA DELLA COVER RIMOSSA */
             background-color: #000;
         }
 
@@ -77,51 +76,49 @@
             width: 100%; height: 100%;
             object-fit: cover;
             border-radius: 12px;
-            /* L'EFFETTO MOLLA */
             transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
 
-        /* Classi usate dal JS per l'animazione */
         .cover-hidden { transform: translateY(110%); } 
         .cover-visible { transform: translateY(0); }   
 
         /* =======================================
-           INFO BRANO E ANIMAZIONI
+           INFO BRANO E TESTI
            ======================================= */
         .info-box {
             flex-grow: 1; min-width: 0; overflow: hidden;
-            display: flex; flex-direction: column; justify-content: center; gap: 0px;
+            display: flex; flex-direction: column; justify-content: center; 
+            align-items: flex-start; /* Forza il testo tutto a sinistra */
+            gap: 2px;
         }
         .scroll-container { width: 100%; overflow: hidden; white-space: nowrap; text-align: left; }
         .scroll-wrapper { display: inline-flex; align-items: center; white-space: nowrap; }
         
-        /* Testi leggermente rimpiccioliti per la barra slim */
-        .info-box h2 { font-size: 1rem; font-weight: 800; color: #000; line-height: 1.2; }
-        .info-box p { font-size: 0.8rem; color: #555; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+        .info-box h2 { font-size: 0.95rem; font-weight: 800; color: #000; line-height: 1.2; margin:0;}
+        .info-box p { font-size: 0.75rem; color: #555; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; margin:0;}
         .text-item { white-space: nowrap; padding-right: 0; }
         
         .is-scrolling { animation: marquee 12s linear infinite; }
         @keyframes marquee { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-50%, 0, 0); } }
 
         #buffering-box { display: none; flex-direction: row; align-items: center; width: 100%; height: 16px; }
-        .buf-label { font-size: 0.8rem; font-weight: 800; color: #ffa500; text-transform: uppercase; }
-        .buf-bananas { font-size: 0.8rem; margin-left: 5px; white-space: nowrap; }
+        .buf-label { font-size: 0.75rem; font-weight: 800; color: #ffa500; text-transform: uppercase; }
+        .buf-bananas { font-size: 0.75rem; margin-left: 5px; white-space: nowrap; }
 
         /* =======================================
            PULSANTI E BADGE
            ======================================= */
-        .actions-box { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-        .status-badge { font-size: 0.65rem; padding: 4px 8px; border-radius: 4px; font-weight: 700; color: #fff; background: #555; }
+        .actions-box { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+        .status-badge { font-size: 0.6rem; padding: 4px 6px; border-radius: 4px; font-weight: 700; color: #fff; background: #555; }
         
-        /* Bottone rimpicciolito proporzionalmente */
         .play-btn {
-            background: #000; color: #fff; width: 42px; height: 42px;
+            background: #000; color: #fff; width: 40px; height: 40px;
             border: none; border-radius: 50%; cursor: pointer; display: flex;
             justify-content: center; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
             transition: transform 0.1s ease;
         }
         .play-btn:active { transform: scale(0.92); }
-        .play-btn svg { width: 18px; height: 18px; fill: currentColor; }
+        .play-btn svg { width: 16px; height: 16px; fill: currentColor; }
         
         @keyframes spin-anim { 100% { transform: rotate(360deg); } }
         .spin { animation: spin-anim 1s linear infinite; }
@@ -129,32 +126,26 @@
         /* =======================================
            ADATTAMENTO MOBILE
            ======================================= */
-        @media (max-width: 650px) {
-            .player-wrapper { margin-top: 150px; height: 60px; width: 95%; }
-            .player-bar { width: calc(100% - 40px); padding: 0 15px 0 115px; }
+        @media (max-width: 600px) {
+            .player-wrapper { margin-top: 150px; height: 60px; width: 95%; max-width: 100%; }
+            .player-bar { width: calc(100% - 40px); padding: 0 10px 0 105px; }
             .cover-mask { left: -15px; width: 200px; height: 250px; bottom: 10px; }
-            .cover-stage { left: 15px; width: 130px; height: 130px; }
-            .info-box h2 { font-size: 0.9rem; }
-            .info-box p { font-size: 0.75rem; }
+            .cover-stage { left: 15px; width: 120px; height: 120px; }
+            .info-box h2 { font-size: 0.85rem; }
+            .info-box p { font-size: 0.7rem; }
         }
     </style>
 </head>
 <body>
 
     <div class="player-wrapper">
-        
-        <!-- MASCHERA DI TAGLIO (Nasconde le immagini che cadono in basso) -->
         <div class="cover-mask">
-            <!-- PALCOSCENICO COPERTINE (Dietro la barra) -->
             <div class="cover-stage">
-                <!-- Immagine A -->
                 <img id="cover-a" class="cover-art cover-visible" src="https://assets.nicepagecdn.com/966432fa/6080027/images/monkey_radio500_exzpanded.png" alt="Monkey Cover">
-                <!-- Immagine B (Nascosta) -->
                 <img id="cover-b" class="cover-art cover-hidden" src="" alt="Album Cover">
             </div>
         </div>
 
-        <!-- BARRA BIANCA (Davanti) -->
         <div class="player-bar">
             <div class="info-box">
                 <div class="scroll-container"><div class="scroll-wrapper" id="title-wrapper">
@@ -183,7 +174,6 @@
     <audio id="audioStream" crossorigin="anonymous" preload="none"></audio>
 
     <script>
-        // === CONFIGURAZIONI CORE ===
         const STREAM_URL = "https://a11.asurahosting.com:8610/radio.mp3";
         const STATUS_JSON_URL = "https://a11.asurahosting.com:8610/status-json.xsl";
         const DEFAULT_COVER = "https://assets.nicepagecdn.com/966432fa/6080027/images/monkey_radio500_exzpanded.png"; 
@@ -209,7 +199,6 @@
         let userIntentPlay = false; let reconnectTimer = null; let pauseTime = 0; let bananaInterval = null;
         let currentSongInfo = "Diretta Streaming"; let currentCoverUrl = null;
 
-        // === SWAP ANIMATO COPERTINA ===
         function swapCover(newUrl) {
             const incomingUrl = newUrl || DEFAULT_COVER;
             if (activeCover === 'A') {
@@ -225,7 +214,6 @@
             }
         }
 
-        // === MARQUEE TESTO ===
         function applyMarquee(originalText) {
             trackWrapper.classList.remove('is-scrolling'); trackWrapper.innerHTML = '';
             const item = document.createElement('span'); item.className = 'text-item'; 
@@ -237,7 +225,6 @@
         }
         window.addEventListener('resize', () => applyMarquee(currentSongInfo));
 
-        // === LETTURA DIRETTA DA ASURAHOSTING ===
         async function fetchSongData() {
             try {
                 const res = await fetch(STATUS_JSON_URL + "?_=" + Date.now());
@@ -256,7 +243,6 @@
             } catch (err) {}
         }
 
-        // === RICERCA ITUNES ===
         async function processNewSong(songName) {
             let coverUrl = null;
             if (songName !== "Diretta Streaming") {
@@ -276,7 +262,6 @@
 
         setInterval(fetchSongData, 10000); fetchSongData();
 
-        // === UI BANANE E STATI ===
         function startBananas() {
             trackContainer.style.display = 'none'; bufferingBox.style.display = 'flex';
             clearInterval(bananaInterval); let bCount = 0;
@@ -291,7 +276,6 @@
             else if (state === 'stopped') { playIcon.innerHTML = playSVG; playIcon.classList.remove('spin'); setStatus("STOP", "#555"); stopBananas(); }
         }
 
-        // === GESTIONE STREAM ===
         function hardStop() { audio.pause(); audio.removeAttribute('src'); audio.load(); }
         playBtn.addEventListener('click', () => {
             let now = Date.now();
@@ -304,7 +288,6 @@
             }
         });
 
-        // === RECONNECT ===
         function forceReconnect() {
             if (!userIntentPlay) return; setUIState('loading'); hardStop(); audio.src = `${STREAM_URL}?t=${Date.now()}`;
             audio.play().catch(() => { reconnectTimer = setTimeout(forceReconnect, 3000); });
@@ -315,7 +298,6 @@
         audio.addEventListener('playing', () => { if (userIntentPlay) { clearTimeout(reconnectTimer); setUIState('playing'); } });
         audio.addEventListener('pause', () => { if (userIntentPlay && audio.readyState > 0) { userIntentPlay = false; pauseTime = Date.now(); clearTimeout(reconnectTimer); setUIState('stopped'); } });
 
-        // === MEDIA SESSION & WAKELOCK ===
         function updateMediaSession() {
             if ('mediaSession' in navigator) {
                 let title = currentSongInfo; let artist = "Monkey Radio Italy";
