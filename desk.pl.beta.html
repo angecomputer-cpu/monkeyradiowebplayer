@@ -11,63 +11,47 @@
             background-color: transparent; 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             display: flex; justify-content: center; align-items: center; 
-            min-height: 350px; 
+            min-height: 100vh; /* Usa tutto lo spazio dell'iframe */
             user-select: none;
         }
 
         /* =======================================
-           STRUTTURA WIDGET COMPATTA E OTTIMIZZATA
+           STRUTTURA WIDGET (Geometria perfetta)
            ======================================= */
         .player-wrapper {
             position: relative;
             width: 100%;
-            max-width: 560px; /* Leggermente più stretto per raggruppare gli elementi */
-            height: 60px; 
-            margin: 180px auto 40px auto; 
+            max-width: 540px; /* Compatto ed elegante */
+            height: 60px; /* Altezza barra bianca */
+            margin-top: 80px; /* Spazio per la cover che sbuca da sopra */
         }
 
         /* =======================================
-           BARRA BIANCA (Primo Piano)
-           ======================================= */
-        .player-bar {
-            position: absolute;
-            top: 0; right: 0;
-            width: calc(100% - 90px); /* La barra inizia un po' più a sinistra */
-            height: 100%;
-            background: #ffffff;
-            border-radius: 12px;
-            z-index: 10; 
-            display: flex; align-items: center; justify-content: space-between;
-            /* IL SEGRETO È QUI: Padding sinistro ridotto per incollare il testo alla cover! */
-            padding: 0 15px 0 125px; 
-            box-shadow: 0 8px 30px rgba(0,0,0,0.15); 
-        }
-
-        /* =======================================
-           LA MASCHERA MAGICA (Taglia l'animazione)
+           LA MASCHERA (Nasconde la cover in basso)
            ======================================= */
         .cover-mask {
             position: absolute;
-            left: -20px; 
-            bottom: 10px; 
-            width: 320px; 
-            height: 400px;
-            overflow: hidden; 
-            z-index: 1; 
+            left: 0; 
+            bottom: 10px; /* Taglia esattamente dietro la barra bianca */
+            width: 150px; 
+            height: 200px;
+            overflow: hidden; /* Magia: fa sparire la cover quando scende! */
+            z-index: 1; /* DIETRO la barra bianca */
             pointer-events: none;
         }
 
         /* =======================================
-           PALCO DELLA COPERTINA E MOLLA
+           COPERTINA ANIMATA (Effetto Molla)
            ======================================= */
         .cover-stage {
             position: absolute;
-            left: 20px; 
+            left: 0; 
             bottom: 0; 
-            width: 220px; /* Ottimizzata per non "mangiare" la barra */
-            height: 220px;
-            border-radius: 12px;
+            width: 140px; /* Copertina grande e proporzionata */
+            height: 140px;
+            border-radius: 10px;
             background-color: #000;
+            box-shadow: -5px 10px 20px rgba(0,0,0,0.25); /* Profondità */
         }
 
         .cover-art {
@@ -75,7 +59,7 @@
             top: 0; left: 0;
             width: 100%; height: 100%;
             object-fit: cover;
-            border-radius: 12px;
+            border-radius: 10px;
             transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
 
@@ -83,19 +67,37 @@
         .cover-visible { transform: translateY(0); }   
 
         /* =======================================
+           BARRA BIANCA (Primo Piano)
+           ======================================= */
+        .player-bar {
+            position: absolute;
+            top: 0; right: 0;
+            width: calc(100% - 110px); /* Lascia 110px a sinistra per la cover */
+            height: 100%;
+            background: #ffffff;
+            border-radius: 12px;
+            z-index: 2; /* DAVANTI alla cover */
+            display: flex; align-items: center; justify-content: space-between;
+            
+            /* IL SEGRETO È QUI: 35px di padding fanno iniziare il testo esattamente 5px DOPO la copertina! ZERO SPAZI BIANCHI. */
+            padding: 0 15px 0 35px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1); 
+        }
+
+        /* =======================================
            INFO BRANO E TESTI
            ======================================= */
         .info-box {
             flex-grow: 1; min-width: 0; overflow: hidden;
             display: flex; flex-direction: column; justify-content: center; 
-            align-items: flex-start; /* Forza il testo tutto a sinistra */
+            align-items: flex-start; /* Testo allineato a sinistra */
             gap: 2px;
         }
         .scroll-container { width: 100%; overflow: hidden; white-space: nowrap; text-align: left; }
         .scroll-wrapper { display: inline-flex; align-items: center; white-space: nowrap; }
         
-        .info-box h2 { font-size: 0.95rem; font-weight: 800; color: #000; line-height: 1.2; margin:0;}
-        .info-box p { font-size: 0.75rem; color: #555; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; margin:0;}
+        .info-box h2 { font-size: 0.95rem; font-weight: 800; color: #000; line-height: 1.2; margin: 0; }
+        .info-box p { font-size: 0.75rem; color: #555; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; margin: 0; }
         .text-item { white-space: nowrap; padding-right: 0; }
         
         .is-scrolling { animation: marquee 12s linear infinite; }
@@ -112,7 +114,7 @@
         .status-badge { font-size: 0.6rem; padding: 4px 6px; border-radius: 4px; font-weight: 700; color: #fff; background: #555; }
         
         .play-btn {
-            background: #000; color: #fff; width: 40px; height: 40px;
+            background: #000; color: #fff; width: 42px; height: 42px;
             border: none; border-radius: 50%; cursor: pointer; display: flex;
             justify-content: center; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
             transition: transform 0.1s ease;
@@ -126,11 +128,11 @@
         /* =======================================
            ADATTAMENTO MOBILE
            ======================================= */
-        @media (max-width: 600px) {
-            .player-wrapper { margin-top: 150px; height: 60px; width: 95%; max-width: 100%; }
-            .player-bar { width: calc(100% - 40px); padding: 0 10px 0 105px; }
-            .cover-mask { left: -15px; width: 200px; height: 250px; bottom: 10px; }
-            .cover-stage { left: 15px; width: 120px; height: 120px; }
+        @media (max-width: 500px) {
+            .player-wrapper { width: 95%; margin-top: 60px; }
+            .cover-mask { width: 110px; bottom: 8px; }
+            .cover-stage { width: 100px; height: 100px; }
+            .player-bar { width: calc(100% - 80px); padding: 0 10px 0 25px; } /* Proporzione matematica mantenuta */
             .info-box h2 { font-size: 0.85rem; }
             .info-box p { font-size: 0.7rem; }
         }
@@ -139,6 +141,7 @@
 <body>
 
     <div class="player-wrapper">
+        <!-- Maschera per nascondere l'animazione -->
         <div class="cover-mask">
             <div class="cover-stage">
                 <img id="cover-a" class="cover-art cover-visible" src="https://assets.nicepagecdn.com/966432fa/6080027/images/monkey_radio500_exzpanded.png" alt="Monkey Cover">
@@ -146,6 +149,7 @@
             </div>
         </div>
 
+        <!-- Barra bianca con testi -->
         <div class="player-bar">
             <div class="info-box">
                 <div class="scroll-container"><div class="scroll-wrapper" id="title-wrapper">
